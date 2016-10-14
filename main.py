@@ -7,7 +7,7 @@ import argparse
 
 import random
 from simplecrypt import encrypt, decrypt, DecryptionException
-from Crypto.Hash import SHA256
+
 import Crypto
 
 
