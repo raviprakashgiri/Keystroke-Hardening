@@ -124,8 +124,8 @@ def parser(test_file):
 	    	m_features = ready_for_login(pwd, features, table_instruct) # need to do it later
 	    	if (m_features == 0):
 	        	continue
-	      	table_instruct, hpwd = create_instruct_table(m_features, pwd)
-	      	create_hist(m_features, hpwd) 
+	      	h_pwd, table_instruct = create_instruct_table(m_features, pwd)
+	      	create_hist(m_features, h_pwd) 
 
 #========== input file parser ends: ===========#
 
