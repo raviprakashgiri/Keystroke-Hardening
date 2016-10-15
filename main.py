@@ -113,6 +113,9 @@ def parser(test_file):
 	    pwd = test_file[n]
 	    features = map(int, test_file[n+1].split(','))
 	    print features
+	    if (len(pwd)-2 != len(features)):
+	    print 'The length of pswd must equal number of feature values'
+	    sys.exit();
 	    # we also need to validate the inputs sometime later....
 	    if n <= (h_max_entries * 2) - 2:
 	    	m_features.append(features)
