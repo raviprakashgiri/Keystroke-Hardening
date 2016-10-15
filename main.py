@@ -143,11 +143,10 @@ def create_instruct_table(m_features, pwd):
 
   table_instruct=[]
 
-  
   for i in xrange(0, max_features):
     
-    if ((i < len(means)) and ((abs(means[i] - t_val) - 0.0001) > (k_val * stds[i]))):
-      if (means[i] < t_val):
+    if ((i < len(average)) and ((abs(average[i] - t_val) - 0.0001) > (k_val * sigma[i]))):
+      if (average[i] < t_val):
         
         table_instruct.append([
           alpha_cal(pwd, i+1, poly),
