@@ -134,10 +134,10 @@ def parser(test_file):
 
 #========== instruction table creation begins: ===========#
 
-def create_instruct_table(history_features, pwd):
+def create_instruct_table(m_features, pwd):
   
-  stds = np.std(history_features, axis = 0)
-  means = np.mean(history_features, axis = 0)
+  stds = np.std(m_features, axis = 0)
+  means = np.mean(m_features, axis = 0)
   hpwd = random.randrange(0, q_val-1)
   poly = polynomial_gen(max_features-1, hpwd)
 
