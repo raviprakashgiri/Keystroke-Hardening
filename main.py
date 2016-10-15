@@ -33,7 +33,7 @@ history_file_name = 'history'
 h_max_entries = 5   # 5 we'll save, from 6th we'll start checking
 h_pwd = randint(0, q_val -1)
 #print h_pwd
-pwd_len = 12
+pwd_len = 25
 max_feature = pwd_len - 1
 
 
@@ -140,7 +140,7 @@ def ready_for_login():
 
 
 #========== Create history file begins: ===========#
-def create_hist():
+def create_hist(m_features, h_pwd):
 	pass
 #========== create history file ends: ===========#
 
