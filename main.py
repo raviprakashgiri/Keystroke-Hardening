@@ -33,7 +33,9 @@ history_file_name = 'history'
 h_max_entries = 5   # 5 we'll save, from 6th we'll start checking
 h_pwd = randint(0, q_val -1)
 #print h_pwd
-max_feature = 65
+pwd_len = 12
+max_feature = pwd_len - 1
+
 
 
 class Polynomial:
@@ -103,74 +105,69 @@ def beta_cal(input ,polynomial):
 	var_ =  (polynomial.val(g_) + g_) % q_val
 	return var_
 '''
+#========== input file parser begins: ===========#
 
 def parser(test_file):
 	m_features = []
-	for i in xrange(0, len(test_file), 2):  # first two lines at a time
-	    pwd = test_file[i]
-	    features = map(int, test_file[i+1].split(','))
+	for n in xrange(0, len(test_file), 2):  # first two lines at a time
+	    pwd = test_file[n]
+	    features = map(int, test_file[n+1].split(','))
 	    print features
 	    # we also need to validate the inputs sometime later....
-	    if i < (h_max_entries * 2) - 2:
-	      m_features.append(features)
-	      print "Done step 1"
-	    elif i == (h_max_entries * 2) - 2:
-	      m_features.append(features)
-	      h_pwd , table_instruct = create_instruct_table(m_features, pwd)
-	      create_hist(m_features, hpwd)
-	      print "Done step 2"
+	    if n <= (h_max_entries * 2) - 2:
+	    	m_features.append(features)
+	    	if n == (h_max_entries * 2) - 2:
+		      h_pwd , table_instruct = create_instruct_table(m_features, pwd)
+		      create_hist(m_features, h_pwd)
+	      	print "Done step 1"
 	    else:
-	      # sends entries to try_login
-	      m_features = try_login(pwd, features, table_instruct)
-	      if (m_features == 0):
-	        continue
-	      table_instruct, hpwd = create_instruct_table(m_features, pwd)
-	      create_hist(m_features, hpwd)
+	    	m_features = try_login(pwd, features, table_instruct)
+	    	if (m_features == 0):
+	        	continue
+	      	table_instruct, hpwd = create_instruct_table(m_features, pwd)
+	      	create_hist(m_features, hpwd)
+
+#========== input file parser ends: ===========#
 
 
 
 
+#========== instruction table creation begins: ===========#
 
-
-
-def create_instruct_table(history_features, password):
-  # this provides the basic calculations needed for the funtions in the paper
+def create_instruct_table(history_features, pwd):
+  
   stds = np.std(history_features, axis = 0)
   means = np.mean(history_features, axis = 0)
-  hpwd = random.randrange(0, LARGE_PRIME-1)
-  polynom = getRandomPolynomial(MAX_FEATURES-1, hpwd)
+  hpwd = random.randrange(0, q_val-1)
+  poly = polynomial_gen(max_features-1, hpwd)
 
   table_instruct=[]
 
-  # feature is distinguishing
-  for i in xrange(0, MAX_FEATURES):
-    """from the definition:
-       mean feature of user - k(standard deviation of user's features) < or > ti (average feature)
-       average feature is provided as PARAM_T
-       number of standard deviations away is provided as PARAM_K
-    """
+  
+  for i in xrange(0, max_features):
+    
     if ((i < len(means)) and ((abs(means[i] - PARAM_T) - 0.0001) > (PARAM_K * stds[i]))):
       if (means[i] < PARAM_T):
-        # feature is slow so a true value in alpha and random in beta
+        
         table_instruct.append([
-          getAlpha(password, i+1, polynom),
-          getBeta(password+str(random.randrange(0, 1000)), i+1, getRandomPolynomial(MAX_FEATURES-5, random.randrange(0, LARGE_PRIME-1)))
+          alpha_cal(pwd, i+1, poly),
+          beta_cal(pwd+str(random.randrange(0, 1000)), i+1, polynomial_gen(max_features-5, random.randrange(0, q_val-1)))
         ])
       else:
-        # feature is fast so set a random number in the alpha column and true in beta
+        
         table_instruct.append([
-          getAlpha(password+str(random.randrange(0, 1000)), i+1, getRandomPolynomial(MAX_FEATURES-5, random.randrange(0, LARGE_PRIME-1))),
-          getBeta(password, i+1, polynom)
+          alpha_cal(pwd+str(random.randrange(0, 1000)), i+1, polynomial_gen(max_features-5, random.randrange(0, q_val-1))),
+          beta_cal(pwd, i+1, poly)
         ])
-    # not distinguishing so both alpha and beta have true values (right hpwd, polynom, password)
+    
     else:
       table_instruct.append([
-        getAlpha(password, i+1, polynom),
-        getBeta(password, i+1, polynom)
+        alpha_cal(pwd, i+1, poly),
+        beta_cal(pwd, i+1, poly)
       ])
   return [h_pwd, table_instruct]
 
-
+#========== instruction table creation ends: ===========#
 
 
 
@@ -179,12 +176,13 @@ def create_instruct_table(history_features, password):
 content = file2.readlines()
 
 print len(content)
+'''
 
 if __name__ == '__main__':
 	with open(sys.argv[1], 'r') as my_file:
 		parser(my_file.readlines())
 
-'''
+
 
 
 
