@@ -136,18 +136,18 @@ def parser(test_file):
 
 def create_instruct_table(m_features, pwd):
   
-  stds = np.std(m_features, axis = 0)
-  means = np.mean(m_features, axis = 0)
-  hpwd = random.randrange(0, q_val-1)
-  poly = polynomial_gen(max_features-1, hpwd)
+  sigma = np.std(m_features, axis = 0)
+  average = np.mean(m_features, axis = 0)
+  h_pwd = random.randrange(0, q_val-1)
+  poly = polynomial_gen(max_features-1, h_pwd)
 
   table_instruct=[]
 
   
   for i in xrange(0, max_features):
     
-    if ((i < len(means)) and ((abs(means[i] - PARAM_T) - 0.0001) > (PARAM_K * stds[i]))):
-      if (means[i] < PARAM_T):
+    if ((i < len(means)) and ((abs(means[i] - t_val) - 0.0001) > (k_val * stds[i]))):
+      if (means[i] < t_val):
         
         table_instruct.append([
           alpha_cal(pwd, i+1, poly),
