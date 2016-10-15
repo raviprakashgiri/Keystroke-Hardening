@@ -121,7 +121,7 @@ def parser(test_file):
 		      create_hist(m_features, h_pwd)
 	      	print "Done step 1"
 	    else:
-	    	m_features = try_login(pwd, features, table_instruct)
+	    	m_features = ready_for_login(pwd, features, table_instruct) # need to do it lated
 	    	if (m_features == 0):
 	        	continue
 	      	table_instruct, hpwd = create_instruct_table(m_features, pwd)
