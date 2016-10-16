@@ -11,13 +11,16 @@ import random
 from simplecrypt import encrypt, decrypt, DecryptionException
 from Crypto.Hash import SHA
 
+import time,os,sys,transpositionEncrypt,transpositionDecrypt
+
 import Crypto
 
 input = "CorrectPassword"
 
-file1 = open('history.txt', 'w+')
-file2 = open('input.txt', 'r')
 
+#encryption mode
+mode_encrypt= 'encrypt'
+ 
 # standard deviation
 k_val = 2
 # mean
@@ -28,14 +31,14 @@ q_val = Crypto.Util.number.getPrime(160, randfunc=None)
 
 # fixed file size as asked
 h_history_file_size = 600
-history_file_name = 'history'
+contents = ''
 # number of features
 h_max_entries = 5   # 5 we'll save, from 6th we'll start checking
 h_pwd = randint(0, q_val -1)
 #print h_pwd
 pwd_len = 25
 max_feature = pwd_len - 1
-
+translated = ''
 
 
 class Polynomial:
@@ -113,15 +116,12 @@ def parser(test_file):
 	    pwd = test_file[n]
 	    features = map(int, test_file[n+1].split(','))
 	    print features
-	    if (len(pwd)-2 != len(features)):
-	    print 'The length of pswd must equal number of feature values'
-	    sys.exit();
 	    # we also need to validate the inputs sometime later....
 	    if n <= (h_max_entries * 2) - 2:
 	    	m_features.append(features)
 	    	if n == (h_max_entries * 2) - 2:
 		      h_pwd , table_instruct = create_instruct_table(m_features, pwd)
-		      create_hist(m_features, h_pwd)
+		      create_hist(contents = m_features, h_pwd)
 	      	print "Done step 1"
 	    else:
 	    	m_features = ready_for_login(pwd, features, table_instruct) # need to do it later
@@ -143,8 +143,31 @@ def ready_for_login():
 
 
 #========== Create history file begins: ===========#
-def create_hist(m_features, h_pwd):
-	pass
+def do_encryptdecrypt(h_pwd,content, mode_encrypt):
+        start_time = time.time()
+        if mode_encrypt = 'encrypt':
+          translated_ = transpositionEncrypt.ecryptMessage(h_pwd,content)
+        elif mode_encrypt = 'decrypt':
+          translated_ = transpositionDecrypt.decryptMessage(h_pwd,content)
+        total_time = round(time.time() - start_time, 2 )
+        print('%sion time:' %(mode_encrypt.title(), total_time))
+        return translated_
+
+def check_decrypt(h_pwd)
+        if(os.path.exists('history.txt'):
+        f1 = open('history.txt')
+        contents = do_encryptdecrypt(h_pwd,f1.read(),mode_encrypt='decrypt')
+        if contents is not None:
+        return true
+        
+def create_hist(contents, h_pwd)
+        f2 = open('history.txt','wb')
+        res = do_encryptdecrypt(h_pwd,contents,mode_encrypt='encrypt')
+        f2.seek(h_history_file_size - len(res))
+        f2.write()
+        f2.close()
+        print ('Done hist file creation'
+
 #========== create history file ends: ===========#
 
 
