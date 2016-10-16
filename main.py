@@ -148,11 +148,12 @@ def ready_for_login(pwd, features, table_instruct):
 # return feature from the history file adding new feature on success
     text_ = check_decrypt(
         SHAtoSTRING(getHpwdFromTableInstruct(table_instruct, features, pwd)))
-    # if the above fails then the user is denied entry we print 0 to denote denied entry
+    # if fails then we print 0 to denote denied entry
     if text_:
     	print 1
     else:
       	print 0
+      	return 0 
 
   	m_features = []
   	# appends the new feature in the history file
@@ -256,10 +257,10 @@ def getHpwdFromTableInstruct(table_instruct, features, pwd):
     # if the provided feature is greater than the mean
     else:
     	xy_values.append([2*i+1, table_instruct[i-1][1] - ((SHAtoLONG(pwd, 2*i+1) % q_val))])
-  return getHpwdLagrange(xy_values, max_features)
+  return h_pwdLagrange(xy_values, max_features)
 
 # lagrange interpolation to get h_pwd from xy values
-def getHpwdLagrange(xy_values, feature_num):
+def h_pwdLagrange(xy_values, feature_num):
   h_pwd = 0
   nums = []
   dens = []
@@ -274,12 +275,12 @@ def getHpwdLagrange(xy_values, feature_num):
     nums.append(lambda_num * xy_values[i][1])
     dens.append(lambda_den)
   for i in xrange(0, len(nums)):
-    h_pwd += getNum(i, nums, dens)
+    h_pwd += get_Num(i, nums, dens)
     dens_sum *= dens[i]
   return h_pwd/dens_sum
 
-#used to minimize the divisions, copied form internet, mentione the source later...
-def getNum(index, nums, dens):
+#used to minimize the divisions, copied form internet, mentione the source later if necessary...
+def get_Num(index, nums, dens):
   num = 1
   for i in xrange(0, len(nums)):
     if i == index:
