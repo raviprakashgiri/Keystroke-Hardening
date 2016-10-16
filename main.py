@@ -10,9 +10,10 @@ from random import randint
 import random
 from simplecrypt import encrypt, decrypt, DecryptionException
 from Crypto.Hash import SHA
-
-import time,os,sys,transpositionEncrypt,transpositionDecrypt
-
+import os.path
+import time,sys
+from Crypto.Cipher import AES
+import base64
 import Crypto
 
 input = "CorrectPassword"
@@ -37,7 +38,7 @@ h_max_entries = 5   # 5 we'll save, from 6th we'll start checking
 h_pwd = randint(0, q_val -1)
 #print h_pwd
 pwd_len = 25
-max_feature = pwd_len - 1
+max_features = pwd_len - 1
 translated = ''
 
 
@@ -58,12 +59,12 @@ def polynomial_gen(degree, h_pwd):
   return Polynomial(coefficient)
 
 #print coefficient    
-var_new = polynomial_gen(max_feature-1, h_pwd)
+var_new = polynomial_gen(max_features-1, h_pwd)
 print var_new 
 #print random.randint(0, 10000)
 
 h_pwd = random.randrange(0, q_val-1)
-polynomial = polynomial_gen(max_feature-1, h_pwd)
+polynomial = polynomial_gen(max_features-1, h_pwd)
 print polynomial.val(1)
 
 
@@ -121,21 +122,21 @@ def parser(test_file):
 	    	m_features.append(features)
 	    	if n == (h_max_entries * 2) - 2:
 		      h_pwd , table_instruct = create_instruct_table(m_features, pwd)
-		      create_hist(contents = m_features, h_pwd)
+		      create_hist(h_pwd, contents = m_features)
 	      	print "Done step 1"
 	    else:
 	    	m_features = ready_for_login(pwd, features, table_instruct) # need to do it later
 	    	if (m_features == 0):
 	        	continue
 	      	h_pwd, table_instruct = create_instruct_table(m_features, pwd)
-	      	create_hist(m_features, h_pwd) 
+	      	create_hist(h_pwd, contents =m_features) 
 
 #========== input file parser ends: ===========#
 
 
 
 #========== ready_for_login begins: ===========#
-def ready_for_login():
+def ready_for_login(pwd, features, table_instruct):
 	pass
 #========== ready_for_login ends: ===========#
 
@@ -143,30 +144,43 @@ def ready_for_login():
 
 
 #========== Create history file begins: ===========#
-def do_encryptdecrypt(h_pwd,content, mode_encrypt):
+def do_encryptdecrypt(h_pwd,contents, mode_encrypt):
         start_time = time.time()
-        if mode_encrypt = 'encrypt':
-          translated_ = transpositionEncrypt.ecryptMessage(h_pwd,content)
-        elif mode_encrypt = 'decrypt':
-          translated_ = transpositionDecrypt.decryptMessage(h_pwd,content)
-        total_time = round(time.time() - start_time, 2 )
-        print('%sion time:' %(mode_encrypt.title(), total_time))
-        return translated_
+        
+        if mode_encrypt == 'encrypt':
+          enc_secret = AES.new(str(h_pwd)[:32])
+          tag_string = (str(contents) +
+                  (AES.block_size -
+                   len(str(contents)) % AES.block_size) * "\0")
+          text = base64.b64encode(enc_secret.encrypt(tag_string))
 
-def check_decrypt(h_pwd)
-        if(os.path.exists('history.txt'):
-        f1 = open('history.txt')
+           
+ 
+        elif mode_encrypt == 'decrypt':
+          dec_secret = AES.new(str(h_pwd)[:32])
+          raw_decrypted = dec_secret.decrypt(base64.b64decode(cipher_text))
+          text = raw_decrypted.rstrip("\0")
+        total_time = round(time.time() - start_time, 2 )
+        print('%sion time: %s seconds' %(mode_encrypt, str(total_time)))
+        return text
+        
+
+def check_decrypt(h_pwd):
+        if (os.path.isfile('./history.txt')):
+          f1 = open('history.txt')
         contents = do_encryptdecrypt(h_pwd,f1.read(),mode_encrypt='decrypt')
         if contents is not None:
-        return true
+          return true
         
-def create_hist(contents, h_pwd)
+def create_hist(h_pwd, contents):
+        if contents is None:
+           check_decrypt(h_pwd)
         f2 = open('history.txt','wb')
         res = do_encryptdecrypt(h_pwd,contents,mode_encrypt='encrypt')
         f2.seek(h_history_file_size - len(res))
-        f2.write()
+        f2.write(res)
         f2.close()
-        print ('Done hist file creation'
+        print ('Done hist file creation')
 
 #========== create history file ends: ===========#
 
