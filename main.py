@@ -30,13 +30,15 @@ q_val = Crypto.Util.number.getPrime(160, randfunc=None)
 #print q_val
 
 # fixed file size as asked
-h_history_file_size = 600
+history_file_name = "history"
+history_file_size = 500
 contents = ''
+padder = "$$$$$"
 # number of features
 h_max_entries = 5   # 5 we'll save, from 6th we'll start checking
 h_pwd = randint(0, q_val -1)
 #print h_pwd
-pwd_len = 25
+pwd_len = 65
 max_features = pwd_len - 1
 translated = ''
 
@@ -59,7 +61,7 @@ def polynomial_gen(degree, h_pwd):
 
 #print coefficient    
 var_new = polynomial_gen(max_features-1, h_pwd)
-print var_new 
+#print var_new 
 #print random.randint(0, 10000)
 
 h_pwd = random.randrange(0, q_val-1)
@@ -104,7 +106,7 @@ def validateInputs(pwd, features):
   if (len(pwd) > pwd_len):
     print 'The maximum password length is '+ str(pwd_len) + ' characters'
     sys.exit()
-  if (len(pwd)-1 != len(features)):
+  if (len(pwd)-2 != len(features)):
     print 'The length of password must equal number of feature values'
     sys.exit()
 
@@ -119,25 +121,28 @@ def beta_cal(input ,polynomial):
 #========== input file parser begins: ===========#
 
 def parser(test_file):
-	m_features = []
-	for n in xrange(0, len(test_file), 2):  # first two lines at a time
-	    pwd = test_file[n]
-	    features = map(int, test_file[n+1].split(','))
-	    print features
-	    # we also need to validate the inputs sometime later....
-	    validateInputs(pwd, features)
-	    if n <= (h_max_entries * 2) - 2:
-	    	m_features.append(features)
-	    	if n == (h_max_entries * 2) - 2:
-		      h_pwd , table_instruct = create_instruct_table(m_features, pwd)
-		      create_hist(h_pwd, contents = m_features)
-	      	print "Done step 1"
-	    else:
-	    	m_features = ready_for_login(pwd, features, table_instruct) # need to do it later
-	    	if (m_features == 0):
-	        	continue
-	      	h_pwd, table_instruct = create_instruct_table(m_features, pwd)
-	      	create_hist(h_pwd, contents =m_features) 
+  m_features = []
+  for n in xrange(0, len(test_file), 2):  # first two lines at a time
+      pwd = test_file[n]
+      features = map(int, test_file[n+1].split(','))
+      print features
+      # we also need to validate the inputs sometime later....
+      validateInputs(pwd, features)
+      if n <= (h_max_entries * 2) - 2:
+        m_features.append(features)
+        #print m_features
+        if n == (h_max_entries * 2) - 2:
+          h_pwd ,table_instruct = create_instruct_table(m_features, pwd)
+          #CreateHistory(h_pwd, contents = m_features)
+          CreateHistory(m_features, h_pwd)
+          print "Done step 1"
+      else:
+        m_features = ready_for_login(pwd, features, table_instruct)
+        if (m_features == 0):
+            continue
+        h_pwd, table_instruct = create_instruct_table(m_features, pwd)
+        #CreateHistory(h_pwd, contents =m_features) 
+        CreateHistory(m_features, h_pwd)
 
 #========== input file parser ends: ===========#
 
@@ -146,22 +151,55 @@ def parser(test_file):
 #========== ready_for_login begins: ===========#
 def ready_for_login(pwd, features, table_instruct):
 # return feature from the history file adding new feature on success
-    text_ = check_decrypt(
-        SHAtoSTRING(getHpwdFromTableInstruct(table_instruct, features, pwd)))
-    # if fails then we print 0 to denote denied entry
-    if text_:
-    	print 1
-    else:
-      	print 0
-      	return 0 
-
-  	m_features = []
-  	# appends the new feature in the history file
-  	for line in text_.splitlines():   # Sanya, need text_ also... as we have to append the new feature
-    	m_features.append(map(int, line.split(','))) # hopefully comma separated, remove if not
-	m_features.append(features)
-	return m_features
+  text_ = DecryptFromFile(
+      SHAtoSTRING(getHpwdFromTableInstruct(table_instruct, features, pwd)))
+  # if fails then we print 0 to denote denied entry
+  if text_:
+    print 1
+  else:
+    print 0
+    return 0 
+  
+  m_features = []
+	# appends the new feature in the history file
+  for line in text_.splitlines(): 
+    m_features.append(map(int, line.split(',')))
+  m_features.append(features)
+  return m_features
 #========== ready_for_login ends: ===========#
+
+
+#=============== HISTORY FILE CREATION BEGINS ==================#
+#IF WE'LL USE THIS ONE,WE WON'T NEED THE NEXT 
+
+# encrypt msg by key with AES, saves into binary file
+def EncryptForFile(key, text_):
+  pad_msg = padder + text_ # I don't think this is the right way to pad :P but still...
+  encrypted_text = encrypt(key, pad_msg.rjust(history_file_size, '7'))# extra will be padded by '7' char
+  with open(history_file_name, 'wb') as f:
+    f.write(encrypted_text)
+
+# decrypts msg by key, 
+def DecryptFromFile(key):
+  with open(history_file_name, 'rb') as f:
+    cipher_text = f.read()
+  pad, plain_text = decrypt(key, cipher_text).split(padder)
+  return plain_text
+
+# creates and updates the history file 
+def CreateHistory(m_features, h_pwd):
+  str_ = ''
+  for i in xrange(1, len(m_features)):
+    str_ += ','.join([str(j) for j in m_features[i]]) + '\n'
+  EncryptForFile(SHAtoSTRING(h_pwd),str_)
+
+
+
+
+#=============== HISTORY FILE CREATION ENDS ==================#
+
+
+
 
 
 
@@ -197,7 +235,7 @@ def create_hist(h_pwd, contents):
            check_decrypt(h_pwd)
         f2 = open('history.txt','wb')
         res = do_encryptdecrypt(h_pwd,contents,mode_encrypt='encrypt')
-        f2.seek(h_history_file_size - len(res))
+        f2.seek(history_file_size - len(res))
         f2.write(res)
         f2.close()
         print ('Done hist file creation')
@@ -219,7 +257,7 @@ def create_instruct_table(m_features, pwd):
   table_instruct=[]
 
   for i in xrange(0, max_features):
-    
+    #i < h check below
     if ((i < len(average)) and ((abs(average[i] - t_val) - 0.0001) > (k_val * sigma[i]))):#0.001,small float subtraction problem
       if (average[i] < t_val):
         table_instruct.append([
@@ -256,7 +294,7 @@ def getHpwdFromTableInstruct(table_instruct, features, pwd):
         xy_values.append([2*i, table_instruct[i-1][0] - ((SHAtoLONG(pwd, 2*i) % q_val))])
     # if the provided feature is greater than the mean
     else:
-    	xy_values.append([2*i+1, table_instruct[i-1][1] - ((SHAtoLONG(pwd, 2*i+1) % q_val))])
+      xy_values.append([2*i+1, table_instruct[i-1][1] - ((SHAtoLONG(pwd, 2*i+1) % q_val))])
   return h_pwdLagrange(xy_values, max_features)
 
 # lagrange interpolation to get h_pwd from xy values
@@ -277,7 +315,7 @@ def h_pwdLagrange(xy_values, feature_num):
   for i in xrange(0, len(nums)):
     h_pwd += get_Num(i, nums, dens)
     dens_sum *= dens[i]
-  return h_pwd/dens_sum
+  return h_pwd/dens_sum # floor division to avoide float conversion
 
 #used to minimize the divisions, copied form internet, mentione the source later if necessary...
 def get_Num(index, nums, dens):
@@ -299,8 +337,8 @@ print len(content)
 '''
 
 if __name__ == '__main__':
-	with open(sys.argv[1], 'r') as my_file:
-		parser(my_file.readlines())
+  with open(sys.argv[1], 'r') as my_file:
+    parser(my_file.readlines())
 
 
 
