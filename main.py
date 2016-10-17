@@ -92,15 +92,6 @@ def alpha_cal(pwd, i, polynomial):
 def beta_cal(pwd, i, polynomial):
 	return polynomial.val(2*i+1) + (SHAtoLONG(pwd, 2*i+1) % q_val)	
 
-'''
-hashed = SHA.new(str('ravi')).hexdigest()
-nums = long(''.join([str(ord(c)) for c in hashed]))
-print hashed
-print "rpg" 
-#print long(str(ord(c)) for c in hashed)
-print nums
-'''
-
 
 def validateInputs(pwd, features):
   if (len(pwd) > pwd_len):
@@ -110,14 +101,6 @@ def validateInputs(pwd, features):
     print 'The length of password must equal number of feature values'
     sys.exit()
 
-
-'''
-def beta_cal(input ,polynomial):
-	#hashlib.sha224(input.hexdigest()
-	g_ = hmac.new(input, msg=2*i+1, digestmod=None) 
-	var_ =  (polynomial.val(g_) + g_) % q_val
-	return var_
-'''
 #========== input file parser begins: ===========#
 
 def parser(test_file):
@@ -157,14 +140,15 @@ def parser(test_file):
 #========== ready_for_login begins: ===========#
 def ready_for_login(pwd, features, table_instruct):
 # return feature from the history file adding new feature on success
-  text_ = DecryptFromFile(
+  try:
+    text_ = DecryptFromFile(
       SHAtoSTRING(getHpwdFromTableInstruct(table_instruct, features, pwd)))
   # if fails then we print 0 to denote denied entry
-  if text_:
-    print 1
-  else:
+  except DecryptionException:
     print 0
-    return 0 
+    return 0
+  # finally the user has been granted access to the system
+  print 1
   
   m_features = []
 	# appends the new feature in the history file
