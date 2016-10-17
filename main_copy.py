@@ -101,22 +101,22 @@ def parser(test_file):
       validateInputs(pwd, features)
       if n < (h_max_entries * 2) - 2:
         m_features.append(features)
-        print 's'
+        print 1
         #print m_features
       elif n == (h_max_entries * 2) - 2:
         m_features.append(features)
         h_pwd, table_instruct,feature_type = create_instruct_table(m_features, pwd)
         CreateHistory(m_features, h_pwd)
-        print 's'
+        print 1
       else:
-        print 'n:',n
-        print features
+        #print 'n:',n
+        #print features
         m_features = ready_for_login(pwd, features, table_instruct,feature_type)
-        print m_features
+        #print m_features
         if (m_features == 0):
           continue
         h_pwd, table_instruct,feature_type = create_instruct_table(m_features, pwd)
-        print feature_type
+        #print feature_type
         #CreateHistory(h_pwd, contents =m_features) 
         CreateHistory(m_features, h_pwd)
 
@@ -129,12 +129,12 @@ def parser(test_file):
 def ready_for_login(pwd, features, table_instruct,feature_type):
 # return feature from the history file adding new feature on success
   try:
-    print 'feature_type' ,feature_type
+    
     h_pwd = getHpwdFromTableInstruct(table_instruct, features, pwd)
     #print 'feature_type' ,feature_type
     text_ = DecryptFromFile(
       SHAtoSTRING(h_pwd))
-    print text_
+    
   # if fails then we print 0 to denote denied entry
   except DecryptionException:
     print 'decrypt fail'
@@ -153,13 +153,13 @@ def ready_for_login(pwd, features, table_instruct,feature_type):
                 continue
                 
   
-    print 'f'
+    print 0
     return 0
     
                    
       
   # finally the user has been granted access to the system
-  print 's'
+  print 1
   
   m_features = []
 	# appends the new feature in the history file
