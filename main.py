@@ -66,7 +66,7 @@ var_new = polynomial_gen(max_features-1, h_pwd)
 
 h_pwd = random.randrange(0, q_val-1)
 polynomial = polynomial_gen(max_features-1, h_pwd)
-print polynomial.val(1)
+#print polynomial.val(1)
 
 
 
@@ -125,21 +125,27 @@ def parser(test_file):
   for n in xrange(0, len(test_file), 2):  # first two lines at a time
       pwd = test_file[n]
       features = map(int, test_file[n+1].split(','))
-      print features
+      #print features
       # we also need to validate the inputs sometime later....
       validateInputs(pwd, features)
-      if n <= (h_max_entries * 2) - 2:
+      if n < (h_max_entries * 2) - 2:
         m_features.append(features)
+        print 1
         #print m_features
-        if n == (h_max_entries * 2) - 2:
-          h_pwd ,table_instruct = create_instruct_table(m_features, pwd)
-          #CreateHistory(h_pwd, contents = m_features)
-          CreateHistory(m_features, h_pwd)
-          print "Done step 1"
+      elif n == (h_max_entries * 2) - 2:
+        m_features.append(features)
+        h_pwd, table_instruct = create_instruct_table(m_features, pwd)
+        CreateHistory(m_features, h_pwd)
+        print 1
+        #print "rpg"
+        #print table_instruct
+    # normal attempt
+        #print "Done step 1"
       else:
+        #print table_instruct
         m_features = ready_for_login(pwd, features, table_instruct)
         if (m_features == 0):
-            continue
+          continue
         h_pwd, table_instruct = create_instruct_table(m_features, pwd)
         #CreateHistory(h_pwd, contents =m_features) 
         CreateHistory(m_features, h_pwd)
@@ -287,8 +293,10 @@ def create_instruct_table(m_features, pwd):
 def getHpwdFromTableInstruct(table_instruct, features, pwd):
   xy_values = []
   for i in xrange(1, max_features+1):
-    #boundary check if i > len(features)... for later...#
-
+    #boundary check if i > len(features)... add as the chosen password length is 65, so (64-15) will have to fill up with no distinguishable values
+    if (i > len(features)):
+      xy_values.append([2*i, table_instruct[i-1][0] - ((SHAtoLONG(pwd, 2*i) % q_val))])
+      continue
     # check to see if the feature is less than the provided mean
     if (features[i-1] < t_val):
         xy_values.append([2*i, table_instruct[i-1][0] - ((SHAtoLONG(pwd, 2*i) % q_val))])
@@ -338,31 +346,4 @@ print len(content)
 
 if __name__ == '__main__':
   with open(sys.argv[1], 'r') as my_file:
-    parser(my_file.readlines())
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-          
+    parser(my_file.readlines())      
