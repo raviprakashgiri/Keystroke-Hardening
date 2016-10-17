@@ -1,11 +1,9 @@
 #!/usr/bin/python
 import sys
 import os
-
 import numpy as np
 
 from random import randint
-
 import random
 from simplecrypt import encrypt, decrypt, DecryptionException
 from Crypto.Hash import SHA
@@ -14,9 +12,6 @@ import time,sys
 from Crypto.Cipher import AES
 import base64
 import Crypto
-
-#input = "CorrectPassword"
-
 
 #encryption mode
 mode_encrypt= 'encrypt'
@@ -33,7 +28,6 @@ q_val = Crypto.Util.number.getPrime(160, randfunc=None)
 history_file_name = "history"
 history_file_size = 500
 contents = ''
-padder = "$$$$$"
 # number of features
 h_max_entries = 5   # 5 we'll save, from 6th we'll start checking
 h_pwd = randint(0, q_val -1)
@@ -68,13 +62,6 @@ h_pwd = random.randrange(0, q_val-1)
 polynomial = polynomial_gen(max_features-1, h_pwd)
 #print polynomial.val(1)
 
-
-
-'''def alpha_cal(input ,polynomial):
-	g_ = hmac.new(input, msg=2*i, digestmod=None) 
-	var_ =  (polynomial.val(g_) + g_) % q_val
-	return var_
-'''
 
 def SHAtoLONG(pwd, input_i):
   shaed = SHA.new(str(input_i) + pwd).hexdigest()
@@ -120,10 +107,6 @@ def parser(test_file):
         h_pwd, table_instruct = create_instruct_table(m_features, pwd)
         CreateHistory(m_features, h_pwd)
         print 1
-        #print "rpg"
-        #print table_instruct
-    # normal attempt
-        #print "Done step 1"
       else:
         #print table_instruct
         m_features = ready_for_login(pwd, features, table_instruct)
@@ -164,8 +147,9 @@ def ready_for_login(pwd, features, table_instruct):
 
 # encrypt msg by key with AES, saves into binary file
 def EncryptForFile(key, text_):
-  pad_msg = padder + text_ # I don't think this is the right way to pad :P but still...
-  encrypted_text = encrypt(key, pad_msg.rjust(history_file_size, '7'))# extra will be padded by '7' char
+  pad_msg = "$$$$" + text_ # Separator between the text_ and the padder
+  print pad_msg
+  encrypted_text = encrypt(key, pad_msg.rjust(history_file_size, 'S'))# extra will be padded by 'S' char
   with open(history_file_name, 'wb') as f:
     f.write(encrypted_text)
 
@@ -173,7 +157,7 @@ def EncryptForFile(key, text_):
 def DecryptFromFile(key):
   with open(history_file_name, 'rb') as f:
     cipher_text = f.read()
-  pad, plain_text = decrypt(key, cipher_text).split(padder)
+  pad, plain_text = decrypt(key, cipher_text).split("$$$$")
   return plain_text
 
 # creates and updates the history file 
@@ -181,18 +165,10 @@ def CreateHistory(m_features, h_pwd):
   str_ = ''
   for i in xrange(1, len(m_features)):
     str_ += ','.join([str(j) for j in m_features[i]]) + '\n'
+  print str_
   EncryptForFile(SHAtoSTRING(h_pwd),str_)
 
-
-
-
 #=============== HISTORY FILE CREATION ENDS ==================#
-
-
-
-
-
-
 
 #========== Create history file begins: ===========#
 def do_encryptdecrypt(h_pwd,contents, mode_encrypt):
