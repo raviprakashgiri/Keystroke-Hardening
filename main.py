@@ -32,7 +32,7 @@ contents = ''
 h_max_entries = 5   # 5 we'll save, from 6th we'll start checking
 h_pwd = randint(0, q_val -1)
 #print h_pwd
-pwd_len = 65
+pwd_len = 20
 max_features = pwd_len - 1
 translated = ''
 
@@ -84,7 +84,7 @@ def validateInputs(pwd, features):
   if (len(pwd) > pwd_len):
     print 'The maximum password length is '+ str(pwd_len) + ' characters'
     sys.exit()
-  if (len(pwd)-2 != len(features)):
+  if (len(pwd)-1 != len(features)):
     print 'The length of password must equal number of feature values'
     sys.exit()
 
