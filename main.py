@@ -76,11 +76,11 @@ def SHAtoSTRING(input_):
   return SHA.new(str(input_)).hexdigest()
 
 def alpha_cal(pwd, i, polynomial):
-	return polynomial.val(2*i) + (SHAtoLONG(pwd, 2*i) % q_val)
+  return polynomial.val(2*i) + (SHAtoLONG(pwd, 2*i) % q_val)
 
 
 def beta_cal(pwd, i, polynomial):
-	return polynomial.val(2*i+1) + (SHAtoLONG(pwd, 2*i+1) % q_val)	
+  return polynomial.val(2*i+1) + (SHAtoLONG(pwd, 2*i+1) % q_val)  
 
 
 def validateInputs(pwd, features):
@@ -155,7 +155,7 @@ def ready_for_login(pwd, features, table_instruct):
     print 1
     
     m_features = []
-  	# appends the new feature in the history file
+    # appends the new feature in the history file
     for line in text_.splitlines(): 
       m_features.append(map(int, line.split(',')))
     m_features.append(features)
