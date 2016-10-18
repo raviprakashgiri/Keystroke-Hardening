@@ -49,7 +49,7 @@ max_features = pwd_len - 1
 translated = ''
 ER = False   # Default error correction is turned off
 
-
+#====== Function to generate random Polynomial begins=======#
 class Polynomial:
   coef = []
   def __init__(self, coef):
@@ -64,13 +64,9 @@ class Polynomial:
 def polynomial_gen(degree, h_pwd):
   coefficient = [h_pwd] + random.sample(xrange(100), degree)
   return Polynomial(coefficient)
+#====== Function to generate random Polynomial ends=======#
 
-#print coefficient    
-#var_new = polynomial_gen(max_features-1, h_pwd)
-
-#h_pwd = random.randrange(0, q_val-1)
-#polynomial = polynomial_gen(max_features-1, h_pwd)
-
+#Converts SHA value to long int
 def SHAtoLONG(pwd, input_i):
   shaed = SHA.new(str(input_i) + pwd).hexdigest()
   val_ = long(''.join([str(ord(h)) for h in shaed])) # converts into long -- ascii conversion
@@ -125,8 +121,6 @@ def parser(test_file):
         #print m_features
         if (m_features == 0):
           continue
-        #print "printing m_features before is it you"
-        #print m_features
         #print "is it you?"  
         h_pwd, table_instruct = create_instruct_table(m_features, pwd)
         #print "This is the end of the world!!!"   
@@ -137,8 +131,6 @@ def parser(test_file):
 #========== ready_for_login begins: ===========#
 def ready_for_login(pwd, features, table_instruct):
 # return feature from the history file adding new feature on success
-  #print "printing features"
-  #print features
   if ER:
     #Will execute only if ER will be asked, will switch the alpha, betas values
     for i in xrange(0, len(features)+1):
@@ -243,6 +235,7 @@ def create_hist(h_pwd, contents):
 #========== instruction table creation begins: ===========#
 
 def create_instruct_table(m_features, pwd):
+  # constants required as per paper to compute and compare values
   sigma = np.std(m_features, axis = 0)
   average = np.mean(m_features, axis = 0)
   h_pwd = random.randrange(0, q_val-1)
@@ -274,6 +267,7 @@ def create_instruct_table(m_features, pwd):
   return [h_pwd, table_instruct]
 
 #========== instruction table creation ends: ===========#
+
 
 #============== retrieval from instruction table begins===================#
 
@@ -322,7 +316,7 @@ def h_pwdLagrange(xy_values, feature_num):
     dens_sum *= dens[i]
   return h_pwd/dens_sum # floor division to avoide float conversion
 
-#used to minimize the divisions, copied form internet, mentione the source later if necessary...
+#used to minimize the divisions
 def get_Num(index, nums, dens):
   num = 1
   for i in xrange(0, len(nums)):
