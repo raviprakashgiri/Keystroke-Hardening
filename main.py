@@ -104,15 +104,15 @@ def parser(test_file):
         #print m_features
       elif n == (h_max_entries * 2) - 2:
         m_features.append(features)
-        h_pwd, table_instruct = create_instruct_table(m_features, pwd)
+        h_pwd, table_instruct,feature_type = create_instruct_table(m_features, pwd)
         CreateHistory(m_features, h_pwd)
         print 1
       else:
         #print table_instruct
-        m_features = ready_for_login(pwd, features, table_instruct)
+        m_features = ready_for_login(pwd, features, table_instruct,feature_type)
         if (m_features == 0):
           continue
-        h_pwd, table_instruct = create_instruct_table(m_features, pwd)
+        h_pwd, table_instruct,feature_type = create_instruct_table(m_features, pwd)
         #CreateHistory(h_pwd, contents =m_features) 
         CreateHistory(m_features, h_pwd)
 
@@ -121,18 +121,35 @@ def parser(test_file):
 
 
 #========== ready_for_login begins: ===========#
-def ready_for_login(pwd, features, table_instruct):
+def ready_for_login(pwd, features, table_instruct, feature_type):
 # return feature from the history file adding new feature on success
   try:
     text_ = DecryptFromFile(
       SHAtoSTRING(getHpwdFromTableInstruct(table_instruct, features, pwd)))
+    return succesful(text_ , features)
   # if fails then we print 0 to denote denied entry
   except DecryptionException:
+    for key in feature_type:
+          if (feature_type[key] =='slow'):
+              #print 'was slow made fast'
+              feature_type[key] = 'fast'
+          else:
+              feature_type[key] = 'slow'
+          #print 'retrying with feature changed:', key    
+          
+          try:
+            h_pwd = getHpwdFromTableInstruct_ec(table_instruct,feature_type, pwd)
+            text_ = DecryptFromFile(SHAtoSTRING(h_pwd))
+            return succesful(text_, features)
+          except DecryptionException:
+                #print 'didnt work'
+                continue
     print 0
     return 0
-  # finally the user has been granted access to the system
+
+#called when file decrypts succesfully 
+def succesful(text_, features):
   print 1
-  
   m_features = []
 	# appends the new feature in the history file
   for line in text_.splitlines(): 
@@ -214,33 +231,38 @@ def create_hist(h_pwd, contents):
 #========== instruction table creation begins: ===========#
 
 def create_instruct_table(m_features, pwd):
-  
+  #print max_features
   sigma = np.std(m_features, axis = 0)
   average = np.mean(m_features, axis = 0)
   h_pwd = random.randrange(0, q_val-1)
   poly = polynomial_gen(max_features-1, h_pwd)
-
+  #print 'sig','avg',sigma, average
   table_instruct=[]
-
+  feature_type = {}
   for i in xrange(0, max_features):
     #i < h check below
-    if ((i < len(average)) and ((abs(average[i] - t_val) - 0.0001) > (k_val * sigma[i]))):#0.001,small float subtraction problem
-      if (average[i] < t_val):
+    if ((i < len(average)) and ((abs(average[i] - t_val) - 0.0001) > (k_val * sigma[i]))):#0.001,small float subtraction problem      if (average[i] < t_val):
+       if (average[i] < t_val):
+        
+        feature_type[i] = 'slow'
         table_instruct.append([
           alpha_cal(pwd, i+1, poly),
           beta_cal(pwd+str(random.randrange(0, 1000)), i+1, polynomial_gen(max_features-5, random.randrange(0, q_val-1)))
         ])
-      else:
+       else:
+        
+        feature_type[i] = 'fast'
         table_instruct.append([
           alpha_cal(pwd+str(random.randrange(0, 1000)), i+1, polynomial_gen(max_features-5, random.randrange(0, q_val-1))),
           beta_cal(pwd, i+1, poly)
         ])
     else:
+      feature_type[i] = 'undis' 
       table_instruct.append([
         alpha_cal(pwd, i+1, poly),
         beta_cal(pwd, i+1, poly)
       ])
-  return [h_pwd, table_instruct]
+  return [h_pwd, table_instruct, feature_type]
 
 #========== instruction table creation ends: ===========#
 
@@ -259,11 +281,29 @@ def getHpwdFromTableInstruct(table_instruct, features, pwd):
       continue
     # check to see if the feature is less than the provided mean
     if (features[i-1] < t_val):
+      #print 'fast'
+      xy_values.append([2*i, table_instruct[i-1][0] - ((SHAtoLONG(pwd, 2*i) % q_val))])
+    # if the provided feature is greater than the mean
+    else:
+      #print 'slow or un'
+      xy_values.append([2*i+1, table_instruct[i-1][1] - ((SHAtoLONG(pwd, 2*i+1) % q_val))])
+  return h_pwdLagrange(xy_values, max_features)
+
+def getHpwdFromTableInstruct_ec(table_instruct, feature_type, pwd):
+  xy_values = []
+  f= -1
+  for i in xrange(1, max_features+1):
+    f+=1
+    #print feature_type
+    # check to see if the feature is less than the provided mean
+    #print f ,'fealture value',feature_type[f]
+    if (feature_type[f] == 'fast'):
         xy_values.append([2*i, table_instruct[i-1][0] - ((SHAtoLONG(pwd, 2*i) % q_val))])
     # if the provided feature is greater than the mean
     else:
       xy_values.append([2*i+1, table_instruct[i-1][1] - ((SHAtoLONG(pwd, 2*i+1) % q_val))])
   return h_pwdLagrange(xy_values, max_features)
+
 
 # lagrange interpolation to get h_pwd from xy values
 def h_pwdLagrange(xy_values, feature_num):
@@ -300,10 +340,10 @@ def get_Num(index, nums, dens):
 
 '''
 content = file2.readlines()
-
 print len(content)
 '''
 
 if __name__ == '__main__':
   with open(sys.argv[1], 'r') as my_file:
     parser(my_file.readlines())      
+
