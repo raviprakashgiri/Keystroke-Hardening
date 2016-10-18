@@ -14,7 +14,6 @@ import base64
 import Crypto
 import argparse
 
-
 #encryption mode
 mode_encrypt= 'encrypt'
  
@@ -24,7 +23,7 @@ k_val = 2
 t_val = 10
 
 q_val = Crypto.Util.number.getPrime(160, randfunc=None)
-#print q_val
+#q_val by Crypto random generator
 
 # fixed file size as asked
 history_file_name = "history"
@@ -34,10 +33,10 @@ contents = ''
 h_max_entries = 5   # 5 we'll save, from 6th we'll start checking
 h_pwd = randint(0, q_val -1)
 #print h_pwd
-pwd_len = 65
+pwd_len = 25
 max_features = pwd_len - 1
 translated = ''
-ER = False
+ER = False   # Default error correction is turned off
 
 
 class Polynomial:
@@ -58,13 +57,9 @@ def polynomial_gen(degree, h_pwd):
 
 #print coefficient    
 var_new = polynomial_gen(max_features-1, h_pwd)
-#print var_new 
-#print random.randint(0, 10000)
 
 h_pwd = random.randrange(0, q_val-1)
 polynomial = polynomial_gen(max_features-1, h_pwd)
-#print polynomial.val(1)
-
 
 def SHAtoLONG(pwd, input_i):
   shaed = SHA.new(str(input_i) + pwd).hexdigest()
@@ -75,14 +70,15 @@ def SHAtoLONG(pwd, input_i):
 def SHAtoSTRING(input_):
   return SHA.new(str(input_)).hexdigest()
 
+# alpha value calculation by random polynomial 
 def alpha_cal(pwd, i, polynomial):
   return polynomial.val(2*i) + (SHAtoLONG(pwd, 2*i) % q_val)
 
-
+# alpha value calculation by random polynomial 
 def beta_cal(pwd, i, polynomial):
   return polynomial.val(2*i+1) + (SHAtoLONG(pwd, 2*i+1) % q_val)  
 
-
+# We are validating the inputs to check if it is of the required length or not
 def validateInputs(pwd, features):
   if (len(pwd) > pwd_len):
     print 'The maximum password length is '+ str(pwd_len) + ' characters'
@@ -99,7 +95,7 @@ def parser(test_file):
       pwd = test_file[n]
       features = map(int, test_file[n+1].split(','))
       #print features
-      # we also need to validate the inputs sometime later....
+      # Function call to validate the inputs
       validateInputs(pwd, features)
       if n < (h_max_entries * 2) - 2:
         m_features.append(features)
@@ -115,12 +111,15 @@ def parser(test_file):
       else:
         #print table_instruct
         m_features = ready_for_login(pwd, features, table_instruct)
+        #print "much before"
+        #print m_features
         if (m_features == 0):
           continue
-        print m_features
-        print "is it you?"  
+        #print "printing m_features before is it you"
+        #print m_features
+        #print "is it you?"  
         h_pwd, table_instruct = create_instruct_table(m_features, pwd)
-        print "No, I'm not!"  
+        #print "No, I'm not!"  
         #CreateHistory(h_pwd, contents =m_features) 
         CreateHistory(m_features, h_pwd)
 
@@ -129,6 +128,8 @@ def parser(test_file):
 #========== ready_for_login begins: ===========#
 def ready_for_login(pwd, features, table_instruct):
 # return feature from the history file adding new feature on success
+  #print "printing features"
+  #print features
   if ER:
     #Will execute only if ER will be asked, will switch the alpha, betas values
     for i in xrange(0, len(features)+1):
@@ -154,12 +155,14 @@ def ready_for_login(pwd, features, table_instruct):
     # finally the user has been granted access to the system
     print 1
     
-    m_features = []
-    # appends the new feature in the history file
-    for line in text_.splitlines(): 
-      m_features.append(map(int, line.split(',')))
-    m_features.append(features)
-    return m_features
+  m_features = []
+  # appends the new feature in the history file
+  for line in text_.splitlines(): 
+    m_features.append(map(int, line.split(',')))
+  m_features.append(features)
+  #print "before return"
+  #print m_features
+  return m_features
 #========== ready_for_login ends: ===========#
 
 
@@ -232,8 +235,11 @@ def create_hist(h_pwd, contents):
 #========== instruction table creation begins: ===========#
 
 def create_instruct_table(m_features, pwd):
-  
+  #print "printing m_features"
+  #print m_features
   sigma = np.std(m_features, axis = 0)
+  #print "printing sigma"
+  #print sigma
   average = np.mean(m_features, axis = 0)
   h_pwd = random.randrange(0, q_val-1)
   poly = polynomial_gen(max_features-1, h_pwd)
@@ -282,7 +288,7 @@ def getHpwdFromTableInstruct(table_instruct, features, pwd, ER_identifier):
         # the ER correction will switche ith alpha/beta value
         xy_values.append([2*i+1, table_instruct[i-1][1] - ((SHAtoLONG(pwd, 2*i+1) % q_val))])
       else:
-          xy_values.append([2*i, table_instruct[i-1][0] - ((SHAtoLONG(pwd, 2*i) % q_val))])
+        xy_values.append([2*i, table_instruct[i-1][0] - ((SHAtoLONG(pwd, 2*i) % q_val))])
     # if the provided feature is greater than the mean
     else:
       if (ER_identifier == i):
