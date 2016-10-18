@@ -3,19 +3,31 @@ import sys
 import os
 import numpy as np
 
-from random import randint
 import random
 from simplecrypt import encrypt, decrypt, DecryptionException
 from Crypto.Hash import SHA
 import os.path
-import time,sys
-from Crypto.Cipher import AES
-import base64
+#import time,sys
+#from Crypto.Cipher import AES
+#import base64
 import Crypto
 import argparse
 
+
+'''
+===Keystroke Password Hardening===
+requirements: python 2.7.x and pip
+### simple-crypt==4.1.7
+### pycrypto==2.6.1
+### numpy==1.10.1
+compile: python main.py <-e> <input.txt>
+
+Authors: Ravi Prakash Giri, Sanya Ralhan
+
+'''
+
 #encryption mode
-mode_encrypt= 'encrypt'
+#mode_encrypt= 'encrypt'
  
 # standard deviation
 k_val = 2
@@ -31,8 +43,7 @@ history_file_size = 500
 contents = ''
 # number of features
 h_max_entries = 5   # 5 we'll save, from 6th we'll start checking
-h_pwd = randint(0, q_val -1)
-#print h_pwd
+
 pwd_len = 25
 max_features = pwd_len - 1
 translated = ''
@@ -41,7 +52,6 @@ ER = False   # Default error correction is turned off
 
 class Polynomial:
   coef = []
-
   def __init__(self, coef):
     self.coef = coef
 
@@ -56,10 +66,10 @@ def polynomial_gen(degree, h_pwd):
   return Polynomial(coefficient)
 
 #print coefficient    
-var_new = polynomial_gen(max_features-1, h_pwd)
+#var_new = polynomial_gen(max_features-1, h_pwd)
 
-h_pwd = random.randrange(0, q_val-1)
-polynomial = polynomial_gen(max_features-1, h_pwd)
+#h_pwd = random.randrange(0, q_val-1)
+#polynomial = polynomial_gen(max_features-1, h_pwd)
 
 def SHAtoLONG(pwd, input_i):
   shaed = SHA.new(str(input_i) + pwd).hexdigest()
@@ -119,8 +129,7 @@ def parser(test_file):
         #print m_features
         #print "is it you?"  
         h_pwd, table_instruct = create_instruct_table(m_features, pwd)
-        #print "No, I'm not!"  
-        #CreateHistory(h_pwd, contents =m_features) 
+        #print "This is the end of the world!!!"   
         CreateHistory(m_features, h_pwd)
 
 #========== input file parser ends: ===========#
@@ -146,15 +155,14 @@ def ready_for_login(pwd, features, table_instruct):
       break
   else:  
     try:
-      text_ = DecryptFromFile(
-        SHAtoSTRING(getHpwdFromTableInstruct(table_instruct, features, pwd, 9999))) # 9999 any arbitrary value greater than max_features to differentiate from ER
+      text_ = DecryptFromFile(SHAtoSTRING(getHpwdFromTableInstruct(table_instruct, features, pwd, 99999))) # 99999 any arbitrary value greater than max_features to differentiate from ER
     # if fails then we print 0 to denote denied entry
     except DecryptionException:
       print 0
       return 0
     # finally the user has been granted access to the system
     print 1
-    
+
   m_features = []
   # appends the new feature in the history file
   for line in text_.splitlines(): 
@@ -167,7 +175,6 @@ def ready_for_login(pwd, features, table_instruct):
 
 
 #=============== HISTORY FILE CREATION BEGINS ==================#
-#IF WE'LL USE THIS ONE,WE WON'T NEED THE NEXT 
 
 # encrypt msg by key with AES, saves into binary file
 def EncryptForFile(key, text_):
@@ -193,7 +200,7 @@ def CreateHistory(m_features, h_pwd):
   EncryptForFile(SHAtoSTRING(h_pwd),str_)
 
 #=============== HISTORY FILE CREATION ENDS ==================#
-
+'''
 #========== Create history file begins: ===========#
 def do_encryptdecrypt(h_pwd,contents, mode_encrypt):
         start_time = time.time()
@@ -231,15 +238,12 @@ def create_hist(h_pwd, contents):
         print ('Done hist file creation')
 
 #========== create history file ends: ===========#
+'''
 
 #========== instruction table creation begins: ===========#
 
 def create_instruct_table(m_features, pwd):
-  #print "printing m_features"
-  #print m_features
   sigma = np.std(m_features, axis = 0)
-  #print "printing sigma"
-  #print sigma
   average = np.mean(m_features, axis = 0)
   h_pwd = random.randrange(0, q_val-1)
   poly = polynomial_gen(max_features-1, h_pwd)
@@ -256,7 +260,7 @@ def create_instruct_table(m_features, pwd):
           beta_cal(pwd+str(random.randrange(0, 1000)), i+1, polynomial_gen(max_features-5, random.randrange(0, q_val-1)))
         ])
       else:
-        # feature is slow so alpha is true but random in beta
+        # feature is slow so a true value in beta and alpha can be a random
         table_instruct.append([
           alpha_cal(pwd+str(random.randrange(0, 1000)), i+1, polynomial_gen(max_features-5, random.randrange(0, q_val-1))),
           beta_cal(pwd, i+1, poly)
