@@ -12,8 +12,6 @@ import time,sys
 from Crypto.Cipher import AES
 import base64
 import Crypto
-import argparse
-
 
 #encryption mode
 mode_encrypt= 'encrypt'
@@ -37,7 +35,6 @@ h_pwd = randint(0, q_val -1)
 pwd_len = 65
 max_features = pwd_len - 1
 translated = ''
-ER = False
 
 
 class Polynomial:
@@ -76,11 +73,11 @@ def SHAtoSTRING(input_):
   return SHA.new(str(input_)).hexdigest()
 
 def alpha_cal(pwd, i, polynomial):
-	return polynomial.val(2*i) + (SHAtoLONG(pwd, 2*i) % q_val)
+  return polynomial.val(2*i) + (SHAtoLONG(pwd, 2*i) % q_val)
 
 
 def beta_cal(pwd, i, polynomial):
-	return polynomial.val(2*i+1) + (SHAtoLONG(pwd, 2*i+1) % q_val)	
+  return polynomial.val(2*i+1) + (SHAtoLONG(pwd, 2*i+1) % q_val)  
 
 
 def validateInputs(pwd, features):
@@ -107,9 +104,7 @@ def parser(test_file):
         #print m_features
       elif n == (h_max_entries * 2) - 2:
         m_features.append(features)
-        #print "before"
         h_pwd, table_instruct = create_instruct_table(m_features, pwd)
-        #print "after"
         CreateHistory(m_features, h_pwd)
         print 1
       else:
@@ -117,49 +112,33 @@ def parser(test_file):
         m_features = ready_for_login(pwd, features, table_instruct)
         if (m_features == 0):
           continue
-        print m_features
-        print "is it you?"  
         h_pwd, table_instruct = create_instruct_table(m_features, pwd)
-        print "No, I'm not!"  
         #CreateHistory(h_pwd, contents =m_features) 
         CreateHistory(m_features, h_pwd)
 
 #========== input file parser ends: ===========#
 
+
+
 #========== ready_for_login begins: ===========#
 def ready_for_login(pwd, features, table_instruct):
 # return feature from the history file adding new feature on success
-  if ER:
-    #Will execute only if ER will be asked, will switch the alpha, betas values
-    for i in xrange(0, len(features)+1):
-      try:
-        text_ = DecryptFromFile(
-          SHAtoSTRING(getHpwdFromTableInstruct(table_instruct, features, pwd, i)))
-      except DecryptionException:
-        if i == len(features):
-          print 0
-          return 0
-        else:
-          continue
-      print 1
-      break
-  else:  
-    try:
-      text_ = DecryptFromFile(
-        SHAtoSTRING(getHpwdFromTableInstruct(table_instruct, features, pwd, 9999))) # 9999 any arbitrary value greater than max_features to differentiate from ER
-    # if fails then we print 0 to denote denied entry
-    except DecryptionException:
-      print 0
-      return 0
-    # finally the user has been granted access to the system
-    print 1
-    
-    m_features = []
-  	# appends the new feature in the history file
-    for line in text_.splitlines(): 
-      m_features.append(map(int, line.split(',')))
-    m_features.append(features)
-    return m_features
+  try:
+    text_ = DecryptFromFile(
+      SHAtoSTRING(getHpwdFromTableInstruct(table_instruct, features, pwd)))
+  # if fails then we print 0 to denote denied entry
+  except DecryptionException:
+    print 0
+    return 0
+  # finally the user has been granted access to the system
+  print 1
+  
+  m_features = []
+  # appends the new feature in the history file
+  for line in text_.splitlines(): 
+    m_features.append(map(int, line.split(',')))
+  m_features.append(features)
+  return m_features
 #========== ready_for_login ends: ===========#
 
 
@@ -169,7 +148,7 @@ def ready_for_login(pwd, features, table_instruct):
 # encrypt msg by key with AES, saves into binary file
 def EncryptForFile(key, text_):
   pad_msg = "$$$$" + text_ # Separator between the text_ and the padder
-  #print pad_msg
+  print pad_msg
   encrypted_text = encrypt(key, pad_msg.rjust(history_file_size, 'S'))# extra will be padded by 'S' char
   with open(history_file_name, 'wb') as f:
     f.write(encrypted_text)
@@ -186,7 +165,7 @@ def CreateHistory(m_features, h_pwd):
   str_ = ''
   for i in xrange(1, len(m_features)):
     str_ += ','.join([str(j) for j in m_features[i]]) + '\n'
-  #print str_
+  print str_
   EncryptForFile(SHAtoSTRING(h_pwd),str_)
 
 #=============== HISTORY FILE CREATION ENDS ==================#
@@ -229,6 +208,9 @@ def create_hist(h_pwd, contents):
 
 #========== create history file ends: ===========#
 
+
+
+
 #========== instruction table creation begins: ===========#
 
 def create_instruct_table(m_features, pwd):
@@ -244,19 +226,16 @@ def create_instruct_table(m_features, pwd):
     #i < h check below
     if ((i < len(average)) and ((abs(average[i] - t_val) - 0.0001) > (k_val * sigma[i]))):#0.001,small float subtraction problem
       if (average[i] < t_val):
-        # feature is fast so a true value in alpha and random in beta
         table_instruct.append([
           alpha_cal(pwd, i+1, poly),
           beta_cal(pwd+str(random.randrange(0, 1000)), i+1, polynomial_gen(max_features-5, random.randrange(0, q_val-1)))
         ])
       else:
-        # feature is slow so alpha is true but random in beta
         table_instruct.append([
           alpha_cal(pwd+str(random.randrange(0, 1000)), i+1, polynomial_gen(max_features-5, random.randrange(0, q_val-1))),
           beta_cal(pwd, i+1, poly)
         ])
     else:
-      # Not distinguishable, so both alpha and beta will contain true value
       table_instruct.append([
         alpha_cal(pwd, i+1, poly),
         beta_cal(pwd, i+1, poly)
@@ -265,11 +244,13 @@ def create_instruct_table(m_features, pwd):
 
 #========== instruction table creation ends: ===========#
 
+
+
 #============== retrieval from instruction table begins===================#
 
 # retrieves h_pwd from instruction table based on the new feature  and pwd
 
-def getHpwdFromTableInstruct(table_instruct, features, pwd, ER_identifier):
+def getHpwdFromTableInstruct(table_instruct, features, pwd):
   xy_values = []
   for i in xrange(1, max_features+1):
     #boundary check if i > len(features)... add as the chosen password length is 65, so (64-15) will have to fill up with no distinguishable values
@@ -278,18 +259,10 @@ def getHpwdFromTableInstruct(table_instruct, features, pwd, ER_identifier):
       continue
     # check to see if the feature is less than the provided mean
     if (features[i-1] < t_val):
-      if (ER_identifier == i):
-        # the ER correction will switche ith alpha/beta value
-        xy_values.append([2*i+1, table_instruct[i-1][1] - ((SHAtoLONG(pwd, 2*i+1) % q_val))])
-      else:
-          xy_values.append([2*i, table_instruct[i-1][0] - ((SHAtoLONG(pwd, 2*i) % q_val))])
+        xy_values.append([2*i, table_instruct[i-1][0] - ((SHAtoLONG(pwd, 2*i) % q_val))])
     # if the provided feature is greater than the mean
     else:
-      if (ER_identifier == i):
-        # the ER correction will switche ith alpha/beta value
-        xy_values.append([2*i, table_instruct[i-1][0] - ((SHAtoLONG(pwd, 2*i) % q_val))])
-      else:
-        xy_values.append([2*i+1, table_instruct[i-1][1] - ((SHAtoLONG(pwd, 2*i+1) % q_val))])
+      xy_values.append([2*i+1, table_instruct[i-1][1] - ((SHAtoLONG(pwd, 2*i+1) % q_val))])
   return h_pwdLagrange(xy_values, max_features)
 
 # lagrange interpolation to get h_pwd from xy values
@@ -324,12 +297,13 @@ def get_Num(index, nums, dens):
 
 #============== retrieval from instruction table ends===================#
 
-if __name__ == '__main__':
-  dummy = argparse.ArgumentParser(description='Keystrokes based hardening:')
-  dummy.add_argument('file_')
-  dummy.add_argument('-e', '--er_corr', action='store_true')
-  args = dummy.parse_args()
-  ER = args.er_corr
 
-  with open(args.file_, 'r') as my_file:
+'''
+content = file2.readlines()
+
+print len(content)
+'''
+
+if __name__ == '__main__':
+  with open(sys.argv[1], 'r') as my_file:
     parser(my_file.readlines())      
