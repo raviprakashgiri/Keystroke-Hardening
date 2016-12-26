@@ -6,11 +6,6 @@ Password Hardening With Keystroke Dynamics
 
 **Recommended read:** [Fabian et al.](http://cs.unc.edu/~fabian/papers/acm.ccs6.pdf)
 
-Features
---------
-* History File [Module Structure](#correctness)
-* Instruction Table [Module Structure](#performance)
-
 Contents
 --------
 
@@ -82,3 +77,7 @@ Used to calculate the alpha beta login values. First the average and standard de
 
 The function is used to calculate the hardened password and x y values using Lagrange Interpolation.
 
+
+Output
+-----------------
+The output will be in binary (0/1) - 1 indicating successful login, 0 indicating failed login attempt corresponding to the input features.
