@@ -1,10 +1,8 @@
 Password Hardening With Keystroke Dynamics
 ==========================================
-[![paper-url][]][] 
 
 **Keystroke Hardening** is the light-weight implementation of an authentication system which is based on the hard password as well as the keystroke dynamics captured while typing the password.
 
-[paper-url]: http://cs.unc.edu/~fabian/papers/acm.ccs6.pdf
 
 **Recommended read:** [Fabian et al.](http://cs.unc.edu/~fabian/papers/acm.ccs6.pdf)
 
@@ -24,12 +22,6 @@ Contents
 
 * [Module Structure](#module-structure)<br />
   A brief introduction to the structure of the exported module.
-
-* [Documentation](#documentation)<br />
-  A list of available documentation resources.
-
-* [Command line](#command-line)<br />
-  How to use the command line utility.
 
 
 Usage
@@ -63,12 +55,30 @@ Examples
 ### Running without error corrction
 
 ```sh
-$> python main.py testcase1.txt
+$> python main.py input1.txt
 ```
 ### Running with error corrction
 
 
 ```sh
-$> python main.py -e testcase1.txt
+$> python main.py -e input5.txt
 ```
+
+Module Structure
+-----------------
+### parser()
+
+This function takes the input text files (containing the keystrokes of the user, along with the password) and validates the inputs. Once the validation is done a look-up in the instruction table is done followed by in history file.
+
+### ready_for_login()
+
+Once the parser is done, the control is passed to ready_for_login(). It contains the error-correction part also along with the normal program flow. Encrypted history file is decrypted by a call from this function and the new features are added into it.
+
+### create_instruct_table()
+
+Used to calculate the alpha beta login values. First the average and standard deviation value of the login features area calculated, then the corresponding values of alpha and beta are appended into the instruction table.
+
+### h_pwdLagrange()
+
+The function is used to calculate the hardened password and x y values using Lagrange Interpolation.
 
