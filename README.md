@@ -8,8 +8,8 @@ Password Hardening With Keystroke Dynamics
 
 Features
 --------
-* History File [for checking the previous keystrokes](#correctness)
-* Instruction Table [to store alpha, beta values in map](#performance)
+* History File [Module Structure](#correctness)
+* Instruction Table [Module Structure](#performance)
 
 Contents
 --------
